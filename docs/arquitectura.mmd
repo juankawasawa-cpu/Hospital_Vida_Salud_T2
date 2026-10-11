@@ -1,0 +1,19 @@
+flowchart TD
+  U[Paciente / Personal autorizado] --> G[Spring Cloud Gateway :8080]
+  G -->|lb://patient-service| P[Pacientes :8081]
+  G -->|lb://appointment-service| C[Citas :8082]
+  G -->|lb://payment-service| B[Pagos :8085]
+  E[Eureka :8761] -. registro/descubrimiento .- G
+  E -. registro/descubrimiento .- P
+  E -. registro/descubrimiento .- C
+  C -->|HTTP reactivo: valida paciente| P
+  P --> DB[(PostgreSQL + R2DBC)]
+  C --> DB
+  B --> DB
+  B -->|HTTP reactivo: valida paciente| P
+  C --> X((RabbitMQ topic exchange: vidasalud.eventos))
+  X --> Q1[notificaciones.citas]
+  X --> Q2[auditoria.eventos]
+  Q1 --> N[Notification service :8083]
+  Q2 --> A[Audit service :8084]
+  GH[GitHub Push / Pull Request] --> CI[GitHub Actions: Maven verify]

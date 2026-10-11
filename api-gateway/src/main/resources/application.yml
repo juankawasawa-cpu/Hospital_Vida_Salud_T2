@@ -1,0 +1,29 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: pacientes
+          uri: lb://patient-service
+          predicates:
+            - Path=/api/pacientes,/api/pacientes/**
+        - id: citas
+          uri: lb://appointment-service
+          predicates:
+            - Path=/api/citas,/api/citas/**
+        - id: pagos
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/pagos,/api/pagos/**
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway

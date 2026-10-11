@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vidasalud-postgres
+    environment:
+      POSTGRES_DB: vidasalud
+      POSTGRES_USER: ${POSTGRES_USER:-vidasalud}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en el archivo .env local}
+    ports: ["5432:5432"]
+    volumes: ["postgres_data:/var/lib/postgresql/data", "./infra/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro"]
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vidasalud}"], interval: 5s, timeout: 3s, retries: 20}
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: vidasalud-rabbitmq
+    ports: ["5672:5672", "15672:15672"]
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-vidasalud}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Define RABBITMQ_PASSWORD en el archivo .env local}
+    healthcheck: {test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"], interval: 10s, timeout: 5s, retries: 10}
+volumes: {postgres_data: {}}
